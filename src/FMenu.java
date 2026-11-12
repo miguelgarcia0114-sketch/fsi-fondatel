@@ -1,26 +1,45 @@
+
+import javax.swing.JOptionPane;
+
 public class FMenu extends javax.swing.JFrame {
 
-    Conexion cnx;
+    Conexion cnx = new Conexion();
+    String todo = "SELECT * FROM menu";
+    String categorias = "SELECT DISTINCT categoria FROM menu ORDER BY categoria";
+    String por_categoria = "SELECT * FROM menu WHERE categoria = '%s' ORDER BY nombre";
 
     public FMenu() {
         initComponents();
-        TConsultas.setDefaultEditor(Object.class, null);
+        TMenu.setDefaultEditor(Object.class, null);
+        setLocationRelativeTo(this);
+        setTitle("MENÚ DE FONDATEL ");
+        setSize(750, 500);
+        TMenu.setRowHeight(100);
+        
+
+        if (cnx.conectar("localhost", "fondatel", "root", "") == 1) {
+            cnx.entablar(todo, TMenu);
+            cnx.seleccionar(categorias, CBCategoria);
+        } else {
+            JOptionPane.showMessageDialog(this, "Sin conexión. La ventana se cerrará...");
+            System.exit(0);
+        }
     }
 
     public void ObtenerConexion(Conexion cnx) {
         this.cnx = cnx;
-        cnx.seleccionar("SELECT DISTINCT categoria FROM alimentos WHERE estadoa = 'Disponible' ORDER BY categoria", jcCategoria);
+        cnx.seleccionar("SELECT DISTINCT categoria FROM alimentos WHERE estadoa = 'Disponible' ORDER BY categoria", CBCategoria);
         Consultar();
     }
 
     // Muestra los alimentos disponibles, de la categoría elegida
     public void Consultar() {
         String sql = "SELECT foto, nombrea AS nombre, descripcion, precio, categoria FROM alimentos WHERE estadoa = 'Disponible'";
-        if (!jcCategoria.getSelectedItem().toString().equals("Todos")) {
-            sql += " AND categoria = '" + jcCategoria.getSelectedItem().toString() + "'";
+        if (!CBCategoria.getSelectedItem().toString().equals("Todos")) {
+            sql += " AND categoria = '" + CBCategoria.getSelectedItem().toString() + "'";
         }
         sql += " ORDER BY categoria, nombrea";
-        cnx.entablar(sql, TConsultas, 14, 18, 38, 10, 20);
+        cnx.entablar(sql, TMenu, 14, 18, 38, 10, 20);
     }
 
     /**
@@ -35,10 +54,11 @@ public class FMenu extends javax.swing.JFrame {
         jpEncabezado = new javax.swing.JPanel();
         jlTitulo = new javax.swing.JLabel();
         jlDerecha = new javax.swing.JLabel();
+        BCompleto = new javax.swing.JButton();
         jLabel1 = new javax.swing.JLabel();
-        jcCategoria = new javax.swing.JComboBox<>();
+        CBCategoria = new javax.swing.JComboBox<>();
         jScrollPane1 = new javax.swing.JScrollPane();
-        TConsultas = new javax.swing.JTable();
+        TMenu = new javax.swing.JTable();
 
         setDefaultCloseOperation(javax.swing.WindowConstants.DISPOSE_ON_CLOSE);
         setTitle("FondaTel - Menú");
@@ -52,13 +72,24 @@ public class FMenu extends javax.swing.JFrame {
         jlTitulo.setForeground(new java.awt.Color(255, 255, 255));
         jlTitulo.setText("Menú");
         jpEncabezado.add(jlTitulo);
-        jlTitulo.setBounds(20, 11, 380, 34);
+        jlTitulo.setBounds(20, 11, 70, 34);
+
         jlDerecha.setFont(new java.awt.Font("Segoe UI", 0, 13)); // NOI18N
         jlDerecha.setForeground(new java.awt.Color(255, 255, 255));
         jlDerecha.setHorizontalAlignment(javax.swing.SwingConstants.RIGHT);
         jlDerecha.setText("Consulta del menú");
         jpEncabezado.add(jlDerecha);
         jlDerecha.setBounds(540, 16, 300, 24);
+
+        BCompleto.setText("COMPLETO");
+        BCompleto.addActionListener(new java.awt.event.ActionListener() {
+            public void actionPerformed(java.awt.event.ActionEvent evt) {
+                BCompletoActionPerformed(evt);
+            }
+        });
+        jpEncabezado.add(BCompleto);
+        BCompleto.setBounds(100, 20, 100, 23);
+
         getContentPane().add(jpEncabezado);
         jpEncabezado.setBounds(0, 0, 880, 56);
 
@@ -66,16 +97,25 @@ public class FMenu extends javax.swing.JFrame {
         getContentPane().add(jLabel1);
         jLabel1.setBounds(20, 74, 75, 22);
 
-        jcCategoria.setModel(new javax.swing.DefaultComboBoxModel<>(new String[] { "Todos" }));
-        jcCategoria.addActionListener(new java.awt.event.ActionListener() {
-            public void actionPerformed(java.awt.event.ActionEvent evt) {
-                jcCategoriaActionPerformed(evt);
+        CBCategoria.setModel(new javax.swing.DefaultComboBoxModel<>(new String[] { "Todos" }));
+        CBCategoria.setBorder(javax.swing.BorderFactory.createTitledBorder(""));
+        CBCategoria.setMaximumSize(new java.awt.Dimension(100, 64));
+        CBCategoria.setMinimumSize(new java.awt.Dimension(100, 64));
+        CBCategoria.setPreferredSize(new java.awt.Dimension(100, 64));
+        CBCategoria.addItemListener(new java.awt.event.ItemListener() {
+            public void itemStateChanged(java.awt.event.ItemEvent evt) {
+                CBCategoriaItemStateChanged(evt);
             }
         });
-        getContentPane().add(jcCategoria);
-        jcCategoria.setBounds(100, 70, 200, 28);
+        CBCategoria.addActionListener(new java.awt.event.ActionListener() {
+            public void actionPerformed(java.awt.event.ActionEvent evt) {
+                CBCategoriaActionPerformed(evt);
+            }
+        });
+        getContentPane().add(CBCategoria);
+        CBCategoria.setBounds(100, 70, 200, 28);
 
-        TConsultas.setModel(new javax.swing.table.DefaultTableModel(
+        TMenu.setModel(new javax.swing.table.DefaultTableModel(
             new Object [][] {
 
             },
@@ -83,21 +123,32 @@ public class FMenu extends javax.swing.JFrame {
                 "FOTO", "NOMBRE", "DESCRIPCION", "PRECIO", "CATEGORIA"
             }
         ));
-        TConsultas.setRowHeight(90);
-        jScrollPane1.setViewportView(TConsultas);
+        TMenu.setRowHeight(90);
+        jScrollPane1.setViewportView(TMenu);
 
         getContentPane().add(jScrollPane1);
         jScrollPane1.setBounds(20, 110, 820, 370);
-
-        setSize(new java.awt.Dimension(876, 539));
-        setLocationRelativeTo(null);
     }// </editor-fold>//GEN-END:initComponents
 
-    private void jcCategoriaActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_jcCategoriaActionPerformed
+    private void CBCategoriaActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_CBCategoriaActionPerformed
         if (cnx != null) {
             Consultar();
         }
-    }//GEN-LAST:event_jcCategoriaActionPerformed
+    }//GEN-LAST:event_CBCategoriaActionPerformed
+
+    private void BCompletoActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_BCompletoActionPerformed
+        cnx.entablar(todo, TMenu);
+    }//GEN-LAST:event_BCompletoActionPerformed
+
+    private void CBCategoriaItemStateChanged(java.awt.event.ItemEvent evt) {//GEN-FIRST:event_CBCategoriaItemStateChanged
+        String cat = CBCategoria.getSelectedItem().toString();
+        if (cat.equals("Todos")) {
+            cnx.entablar(todo, TMenu);
+        } else {
+            String sql = String.format(por_categoria, cat);
+            cnx.entablar(sql, TMenu);
+        }
+    }//GEN-LAST:event_CBCategoriaItemStateChanged
 
     /**
      * @param args the command line arguments
@@ -131,10 +182,11 @@ public class FMenu extends javax.swing.JFrame {
     }
 
     // Variables declaration - do not modify//GEN-BEGIN:variables
-    private javax.swing.JTable TConsultas;
+    private javax.swing.JButton BCompleto;
+    private javax.swing.JComboBox<String> CBCategoria;
+    private javax.swing.JTable TMenu;
     private javax.swing.JLabel jLabel1;
     private javax.swing.JScrollPane jScrollPane1;
-    private javax.swing.JComboBox<String> jcCategoria;
     private javax.swing.JLabel jlDerecha;
     private javax.swing.JLabel jlTitulo;
     private javax.swing.JPanel jpEncabezado;
